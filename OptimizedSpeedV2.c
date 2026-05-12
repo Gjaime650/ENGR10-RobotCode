@@ -149,20 +149,21 @@ task main(){
 	spin_speed = 110;//spin speed (for searching mode),used in move
 	SensorValue[digital10] = freq;// turn to 1KHz(red beacon)
 
-
+	//first bring up the arm from its natural down position.
 	startMotor(armMotor,100);
 	startMotor(secondArmMotor,100);
 	wait(0.6);
 	stopMotor(armMotor);
 	stopMotor(secondArmMotor);
+	
 	state = 1;
 	//find the red beacon loop
 	while(state == 1){
 		ReadPD();
 		Find_max();
 		Move();
-
-		if(SensorValue(touchSensor) == 1){
+		
+		if(SensorValue(touchSensor) == 1){ //keep checking if the limit switch has been triggered.
 			stopMotor(rightMotor);
 			stopMotor(leftMotor);
 			state = 2;
@@ -174,11 +175,11 @@ task main(){
 		ReadPD();
 
 			if(PD_sum <= ambient_level){
-				startMotor(leftMotor, backSpeed);
+				startMotor(leftMotor, backSpeed);//back up from the red beacon
 				startMotor(rightMotor, -backSpeed);
 				wait(0.5);
-
-				stopMotor(leftMotor);
+				
+				stopMotor(leftMotor); //stop motors and change to state 3
 				stopMotor(rightMotor);
 				state = 3;
 			} else {
@@ -203,25 +204,27 @@ task main(){
 		if(SensorValue(touchSensor) == 1){
 			stopMotor(rightMotor);
 			stopMotor(leftMotor);
+
+			//bring down arm to secure the green beacon
+			startMotor(armMotor,-50);
+			startMotor(secondArmMotor,-50);
+			wait(0.4);
+			stopMotor(armMotor);
+			stopMotor(secondArmMotor);
 			state = 4;
 		}
 
 	}
-	startMotor(armMotor,-50);
-	startMotor(secondArmMotor,-50);
-	wait(0.4);
-	stopMotor(armMotor);
-	stopMotor(secondArmMotor);
 	//get out of arena loop using sonar
 	spin_speed2 = 105;
 	sonarValue = 0;
 	while(true){
 		sonarValue = SensorValue(Sonar);
-		if(sonarValue <= 50 && sonarValue >= 0){
+		if(sonarValue <= 50 && sonarValue >= 0){//keep spinning if sonar detects anything within 0-50 cm.
 			startMotor(leftMotor,spin_speed2);
 			startMotor(rightMotor,spin_speed2);
 			wait(0.25);
-		}else{
+		}else{ //move forward if nothing is detected within 50cm
 			startMotor(leftMotor,-127);
 			startMotor(rightMotor,127);
 			wait(0.1);
